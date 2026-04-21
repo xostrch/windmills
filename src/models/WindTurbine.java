@@ -34,6 +34,10 @@ public class WindTurbine {
         }
     }
 
+    public String getTurbineId() {
+        return turbineId;
+    }
+
     public SensorReading[] getSensors() {
         return Arrays.copyOf(sensors, sensors.length);
     }
