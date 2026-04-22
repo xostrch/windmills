@@ -1,5 +1,6 @@
 package models;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class WindFarm {
@@ -92,7 +93,30 @@ public class WindFarm {
         return filteredFarm;
     }
 
-    //public WindFarm filterByOperator(String operator)
+    public WindFarm filterByOperator(String operator){
+        WindFarm filteredFarm = new WindFarm(this.name, this.operator, this.location);
+        filteredFarm.turbines.addAll(this.turbines);
+        for(LogEntry log : this.logs){
+            if(log.getOperatorName().equalsIgnoreCase(operator)){
+                filteredFarm.logs.add(log);
+            }
+        }
+        return filteredFarm;
+    }
 
+    public WindFarm filterByDateRange(LocalDate start, LocalDate end){
+        WindFarm filteredFarm = new WindFarm(this.name, this.operator, this.location);
+        filteredFarm.turbines.addAll(this.turbines);
+        for(LogEntry log : this.logs){
+            LocalDate logDate = log.getTimestamp().toLocalDate();
+            if(!logDate.isBefore(start) && !logDate.isAfter(end)){
+                filteredFarm.logs.add(log);
+            }
+        }
+        return filteredFarm;
+    }
 
+    public ArrayList<LogEntry> getLogs() {
+        return logs;
+    }
 }

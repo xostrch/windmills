@@ -70,7 +70,16 @@ public class LogEntry {
 
     public boolean isAlarm(){
         if(this.eventType.equals("ALARM")) return true;
-
         return false;
+    }
+
+    public String toString(){
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        return String.format("[%s] %s | %s | %s | %d odczytów",
+                timestamp.format(formatter),
+                turbineId,
+                eventType,
+                operatorName,
+                readings.length);
     }
 }
