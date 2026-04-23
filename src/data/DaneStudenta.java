@@ -25,7 +25,6 @@ public class DaneStudenta {
         };
 
         SensorReading[] s3 = {
-                new SensorReading("POWER", 0.0),
                 new SensorReading("WIND_SPEED", 1.5),
                 new SensorReading("TEMPERATURE", 20.0)
         };
@@ -52,11 +51,19 @@ public class DaneStudenta {
                 turbineId = "T003";
             }
 
-            SensorReading[] readings = {
-                    new SensorReading("POWER", 100 + i * 10),
-                    new SensorReading("WIND_SPEED", 2 + i),
-                    new SensorReading("TEMPERATURE", 15 + i)
-            };
+            SensorReading[] readings;
+            if (turbineId.equals("T003")) {
+                readings = new SensorReading[]{
+                        new SensorReading("WIND_SPEED", 2 + i),
+                        new SensorReading("TEMPERATURE", 15 + i)
+                };
+            } else {
+                readings = new SensorReading[]{
+                        new SensorReading("POWER", 100 + i * 10),
+                        new SensorReading("WIND_SPEED", 2 + i),
+                        new SensorReading("TEMPERATURE", 15 + i)
+                };
+            }
 
             farm.addLog(new LogEntry(
                     LocalDateTime.of(2024, 1, 10 + i, 8 + (i % 10), 0),
@@ -77,12 +84,19 @@ public class DaneStudenta {
                 turbineId = "T001";
             }
 
-            SensorReading[] readings = {
-                    new SensorReading("POWER", 1500 + i * 100),
-                    new SensorReading("WIND_SPEED", 6 + i),
-                    new SensorReading("TEMPERATURE", 20 + i),
-                    new SensorReading("ROTOR_SPEED", 10 + i)
-            };
+            SensorReading[] readings;
+            if (turbineId.equals("T003")) {
+                readings = new SensorReading[]{
+                        new SensorReading("WIND_SPEED", 2 + i),
+                        new SensorReading("TEMPERATURE", 15 + i)
+                };
+            } else {
+                readings = new SensorReading[]{
+                        new SensorReading("POWER", 100 + i * 10),
+                        new SensorReading("WIND_SPEED", 2 + i),
+                        new SensorReading("TEMPERATURE", 15 + i)
+                };
+            }
 
             farm.addLog(new LogEntry(
                     LocalDateTime.of(2024, 2, 10 + i, 10 + i, 0),
@@ -120,12 +134,21 @@ public class DaneStudenta {
         for(int i = 0; i < 20; i++) {
             String turbineId = (i % 2 == 0) ? "T002" : "T003";
 
-            SensorReading[] readings = {
-                    new SensorReading("POWER", 2000 + i * 30),
-                    new SensorReading("WIND_SPEED", 7 + (i % 4)),
-                    new SensorReading("TEMPERATURE", 19 + (i % 10)),
-                    new SensorReading("ROTOR_SPEED", 11 + i)
-            };
+            SensorReading[] readings;
+            if (turbineId.equals("T003")) {
+                readings = new SensorReading[]{
+                        new SensorReading("WIND_SPEED", 7 + (i % 4)),
+                        new SensorReading("TEMPERATURE", 19 + (i % 10)),
+                        new SensorReading("ROTOR_SPEED", 11 + i)
+                };
+            } else {
+                readings = new SensorReading[]{
+                        new SensorReading("POWER", 2000 + i * 30),
+                        new SensorReading("WIND_SPEED", 7 + (i % 4)),
+                        new SensorReading("TEMPERATURE", 19 + (i % 10)),
+                        new SensorReading("ROTOR_SPEED", 11 + i)
+                };
+            }
 
             String eventType = eventTypes[i % eventTypes.length];
 

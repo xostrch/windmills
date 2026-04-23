@@ -60,7 +60,7 @@ public class LogEntry {
     }
 
     public double computePowerOutput(){
-        SensorReading r = getReadingByName("POWER");
+        SensorReading r = getReadingByName("POWER".toUpperCase());
         if(r != null){
             return r.getValue();
         }else{

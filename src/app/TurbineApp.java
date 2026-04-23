@@ -93,6 +93,7 @@ public class TurbineApp {
     }
 
     public void printEventTypesReport(){
+        System.out.println("");
         System.out.println("===LICZBA WPISÓW PER ZDARZENIE===");
         String[] report = analytics.getEventTypesReport(farm);
 
@@ -201,7 +202,7 @@ public class TurbineApp {
         System.out.println(turbine.toString());
 
         String yes = "TAK";
-        String no = "NO";
+        String no = "NIE";
 
         System.out.println("Wyposażenie dodatkowe:");
         if(turbine.hasSensor("POWER")){

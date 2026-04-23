@@ -54,7 +54,7 @@ public class WindFarm {
     public String[] getUniqueOperators(){
         ArrayList<String> tempUnique = new ArrayList<>();
         for(LogEntry log : logs){
-            String operator = log.getOperatorName().toUpperCase();
+            String operator = log.getOperatorName().trim().toUpperCase();
             if(!tempUnique.contains(operator)){
                 tempUnique.add(operator);
             }
@@ -87,7 +87,7 @@ public class WindFarm {
         WindFarm filteredFarm = new WindFarm(this.name, this.operator, this.location);
         filteredFarm.turbines.addAll(this.turbines);
         for(LogEntry log : this.logs) {
-            if(log.getTurbineId().equalsIgnoreCase(id)){
+            if(log.getTurbineId().trim().equalsIgnoreCase(id)){
                 filteredFarm.logs.add(log);
             }
         }
@@ -98,7 +98,7 @@ public class WindFarm {
         WindFarm filteredFarm = new WindFarm(this.name, this.operator, this.location);
         filteredFarm.turbines.addAll(this.turbines);
         for(LogEntry log : this.logs){
-            if(log.getEventType().equalsIgnoreCase(eventType)){
+            if(log.getEventType().trim().equalsIgnoreCase(eventType)){
                 filteredFarm.logs.add(log);
             }
         }
