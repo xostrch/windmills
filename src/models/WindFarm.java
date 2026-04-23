@@ -18,9 +18,17 @@ public class WindFarm {
         this.logs = new ArrayList<>();
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
     public WindTurbine getTurbineById(String id){
         for(WindTurbine t : turbines){
-            if(t.getTurbineId().equals(id)){
+            if(t.getTurbineId().equalsIgnoreCase(id)){
                 return t;
             }
         }
@@ -29,8 +37,8 @@ public class WindFarm {
 
     public String[] getUniqueTurbineIds(){
         ArrayList<String> tempUnique = new ArrayList<>();
-        for(LogEntry log : logs){
-            String id = log.getTurbineId();
+        for(WindTurbine t : turbines){
+            String id = t.getTurbineId();
             if(!tempUnique.contains(id)){
                 tempUnique.add(id);
             }
@@ -117,6 +125,18 @@ public class WindFarm {
     }
 
     public ArrayList<LogEntry> getLogs() {
-        return logs;
+        return new ArrayList<>(logs);
+    }
+
+    public void addLog(LogEntry entry) {
+        if (entry != null) {
+            this.logs.add(entry);
+        }
+    }
+
+    public void addTurbine(WindTurbine turbine){
+        if (turbine != null) {
+            turbines.add(turbine);
+        }
     }
 }

@@ -28,6 +28,9 @@ public class SensorReading {
     @Override
     public boolean equals(Object obj){
         if(this == obj) return true;
+        if (!(obj instanceof SensorReading)) {
+            return false;
+        }
         SensorReading other = (SensorReading) obj;
         boolean namesEqual = this.sensorName.equals(other.sensorName);
         boolean valuesEqual = Math.abs(this.value - other.value) < 1e-9;

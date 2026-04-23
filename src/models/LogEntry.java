@@ -69,8 +69,7 @@ public class LogEntry {
     }
 
     public boolean isAlarm(){
-        if(this.eventType.equals("ALARM")) return true;
-        return false;
+        return this.eventType.equals("ALARM");
     }
 
     public String toString(){
@@ -82,4 +81,5 @@ public class LogEntry {
                 operatorName,
                 readings.length);
     }
+
 }

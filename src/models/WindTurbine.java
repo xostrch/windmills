@@ -65,6 +65,9 @@ public class WindTurbine {
     @Override
     public boolean equals(Object obj){
         if(this == obj) return true;
+        if (!(obj instanceof WindTurbine)) {
+            return false;
+        }
         WindTurbine other = (WindTurbine) obj;
         if (this.turbineId == null || other.turbineId == null) {
             return false;
