@@ -410,7 +410,7 @@ public class TurbineApp {
         String[] allowedEventTypes = {"OPERATIONAL", "ALARM", "MAINTENANCE", "SHUTDOWN", "STARTUP"};
 
         while(eventType.isEmpty()){
-            System.out.println("Podaj typ zdarzenia: ");
+            System.out.print("Podaj typ zdarzenia: ");
             String input = scanner.nextLine().trim().toUpperCase();
             boolean found = false;
             for(int i = 0; i < allowedEventTypes.length; i++){
@@ -428,10 +428,10 @@ public class TurbineApp {
 
         String operatorName = "";
         while(operatorName.isEmpty()){
-            System.out.println("Podaj imię i nazwisko operatora: ");
+            System.out.print("Podaj imię i nazwisko operatora: ");
             operatorName = scanner.nextLine().trim();
             if(operatorName.isEmpty()){
-                System.out.println("Błąd: Nazwisko operatora nie może być puste");
+                System.out.println("Błąd: Imię i nazwisko operatora nie może być puste");
             }
         }
 
@@ -460,6 +460,7 @@ public class TurbineApp {
     public void showFarmInfo(){
         System.out.println("=======INFORMACJE O FARMIE=======");
         System.out.println("Nazwa farmy:       " + farm.getName());
+        System.out.println("Nazwa operatora:       " + farm.getOperator());
         System.out.println("Lokalizacja:       " + farm.getLocation());
         System.out.println("Liczba turbin:     " + farm.turbineCount());
         System.out.println("Całkowita liczba logów: " + farm.logCount());

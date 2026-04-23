@@ -22,6 +22,10 @@ public class WindFarm {
         return name;
     }
 
+    public String getOperator() {
+        return operator;
+    }
+
     public String getLocation() {
         return location;
     }
@@ -50,7 +54,7 @@ public class WindFarm {
     public String[] getUniqueOperators(){
         ArrayList<String> tempUnique = new ArrayList<>();
         for(LogEntry log : logs){
-            String operator = log.getOperatorName();
+            String operator = log.getOperatorName().toUpperCase();
             if(!tempUnique.contains(operator)){
                 tempUnique.add(operator);
             }
