@@ -4,8 +4,7 @@ import models.LogEntry;
 import models.WindFarm;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 
 public class FarmAnalytics {
 
@@ -31,66 +30,36 @@ public class FarmAnalytics {
 
 
     public String[] getEventTypesReport(WindFarm farm) {
-        String[] types = farm.getUniqueEventTypes();
-        int[] counts = new int[types.length];
-
-        for (int i = 0; i < types.length; i++) {
-            counts[i] = farm.filterByEventType(types[i]).logCount();
+        Map<String, Integer> counts = new HashMap<>();
+        for (String type : farm.getUniqueEventTypes()) {
+            counts.put(type, farm.filterByEventType(type).logCount());
         }
-        for (int i = 0; i < counts.length - 1; i++) {
-            for (int j = 0; j < counts.length - i - 1; j++) {
-                if (counts[j] < counts[j + 1]) {
-                    int tempCount = counts[j];
-                    counts[j] = counts[j + 1];
-                    counts[j + 1] = tempCount;
-
-                    String tempType = types[j];
-                    types[j] = types[j + 1];
-                    types[j + 1] = tempType;
-                }
-            }
-        }
-        String[] raport = new String[types.length];
-        for (int i = 0; i < types.length; i++) {
-            raport[i] = types[i] + ":" + counts[i];
-        }
-        return raport;
+        return sortMapToReport(counts);
     }
 
-    public String[] getAlarmsPerTurbineReport(WindFarm farm){
-        String[] turbinesIds = farm.getUniqueTurbineIds();
-        int[] counts = new int[turbinesIds.length];
-
-        for(int i = 0; i < turbinesIds.length; i++){
-            WindFarm turbineFarm = farm.filterByTurbine(turbinesIds[i]);
+    public String[] getAlarmsPerTurbineReport(WindFarm farm) {
+        Map<String, Integer> counts = new HashMap<>();
+        for (String id : farm.getUniqueTurbineIds()) {
+            WindFarm turbineLogs = farm.filterByTurbine(id);
             int alarmCount = 0;
-
-            for(LogEntry log : turbineFarm.getLogs()){
-                if(log.isAlarm()){
-                    alarmCount++;
-                }
+            for (LogEntry log : turbineLogs.getLogs()) {
+                if (log.isAlarm()) alarmCount++;
             }
-            counts[i] = alarmCount;
+            counts.put(id, alarmCount);
         }
+        return sortMapToReport(counts);
+    }
 
-        for (int i = 0; i < counts.length - 1; i++) {
-            for (int j = 0; j < counts.length - i - 1; j++) {
-                if (counts[j] < counts[j + 1]) {
-                    int tempC = counts[j];
-                    counts[j] = counts[j + 1];
-                    counts[j + 1] = tempC;
+    private String[] sortMapToReport(Map<String, Integer> dataMap) {
+        List<Map.Entry<String, Integer>> list = new ArrayList<>(dataMap.entrySet());
 
-                    String tempId = turbinesIds[j];
-                    turbinesIds[j] = turbinesIds[j + 1];
-                    turbinesIds[j + 1] = tempId;
-                }
-            }
+        list.sort((a, b) -> b.getValue().compareTo(a.getValue()));
+        String[] report = new String[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            Map.Entry<String, Integer> entry = list.get(i);
+            report[i] = entry.getKey() + ":" + entry.getValue();
         }
-        String[] raport = new String[turbinesIds.length];
-        for(int i = 0; i < raport.length; i++){
-            raport[i] = turbinesIds[i] + ":" + counts[i];
-        }
-        return raport;
+        return report;
     }
 
     public String[] getMonthlyPowerReport(WindFarm farm){

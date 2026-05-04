@@ -1,9 +1,12 @@
 package models;
 
+import interfaces.Exportable;
+
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
-public class LogEntry {
+public abstract class LogEntry implements Exportable {
     private final LocalDateTime timestamp;
     private final String turbineId;
     private final String eventType;
@@ -29,6 +32,76 @@ public class LogEntry {
         this.operatorName = operatorName;
         this.readings = Arrays.copyOf(readings, readings.length);
     }
+
+    public abstract String describe();
+
+    public String toJson(){
+        return String.format(
+                "{" +
+                        "\"timestamp\":\"%s\"," +
+                        "\"turbineId\":\"%s\"," +
+                        "\"eventType\":\"%s\"," +
+                        "\"operator\":\"%s\"," +
+                        "\"details\":\"%s\"," +
+                        "\"readings\":\"%s\"" +
+                        "}",
+                timestamp.toString(),
+                turbineId,
+                eventType,
+                operatorName,
+                describe().replace("\"", "\\\""),
+                getReadingsAsString()
+        );
+    }
+
+    public String toCsv() {
+        DateTimeFormatter dF = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter tF = DateTimeFormatter.ofPattern("HH:mm");
+
+        return String.format("%s|%s|%s|%s|%s|%s|%s",
+                timestamp.format(dF),
+                timestamp.format(tF),
+                turbineId,
+                eventType,
+                operatorName,
+                describe(),
+                getReadingsAsString()
+        );
+    }
+
+    protected String getReadingsAsString(){
+        SensorReading[] currentReadings = getReadings();
+
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < currentReadings.length; i++){
+            sb.append(currentReadings[i].getSensorName())
+                    .append(":")
+                    .append(String.format(java.util.Locale.US,"%.3f", currentReadings[i].getValue()));
+            if(i < currentReadings.length - 1){
+                sb.append(",");
+            }
+        }
+        return sb.toString();
+    }
+
+    public final String format() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        return String.format("[%s] %-6s | %-12s | %-15s | %s",
+                timestamp.format(formatter),
+                turbineId,
+                eventType,
+                operatorName,
+                describe()
+        );
+    }
+
+    @Override
+    public String toString(){
+        return format();
+    }
+
+
+
 
     public String getTurbineId() {
         return turbineId;
@@ -72,14 +145,23 @@ public class LogEntry {
         return this.eventType.equals("ALARM");
     }
 
-    public String toString(){
-        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        return String.format("[%s] %s | %s | %s | %d odczytów",
-                timestamp.format(formatter),
-                turbineId,
-                eventType,
-                operatorName,
-                readings.length);
+    @Override
+    public boolean equals(Object obj){
+        if(this == obj) return true;
+        if (!(obj instanceof LogEntry)) {
+            return false;
+        }
+
+        LogEntry other = (LogEntry) obj;
+        return java.util.Objects.equals(timestamp, other.timestamp) &&
+                java.util.Objects.equals(turbineId, other.turbineId);
     }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(timestamp, turbineId);
+    }
+
+
 
 }

@@ -1,4 +1,5 @@
 package interfaces;
 
-public class Reportable {
+public interface Reportable {
+    String generateReport();
 }

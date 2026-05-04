@@ -1,4 +1,9 @@
 package interfaces;
 
-public class Inspectable {
+public interface Inspectable {
+    String inspect();
+
+    default boolean isHealthy(){
+        return true;
+    }
 }
