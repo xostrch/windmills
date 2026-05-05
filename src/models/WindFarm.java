@@ -1,9 +1,11 @@
 package models;
 
+import interfaces.Reportable;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-public class WindFarm {
+public class WindFarm implements Reportable {
     private final String name;
     private final String operator;
     private final String location;
@@ -142,5 +144,55 @@ public class WindFarm {
         if (turbine != null) {
             turbines.add(turbine);
         }
+    }
+
+    @Override
+    public String generateReport(){
+        if(logs.isEmpty()){
+            return String.format("Raport dla farmy: %s - (brak wpisów w systemie)", name);
+        }
+
+        java.time.LocalDateTime minDate = logs.get(0).getTimestamp();
+        java.time.LocalDateTime maxDate = logs.get(0).getTimestamp();
+
+        for (LogEntry log : logs) {
+            if (log.getTimestamp().isBefore(minDate)) minDate = log.getTimestamp();
+            if (log.getTimestamp().isAfter(maxDate)) maxDate = log.getTimestamp();
+        }
+
+        String[] eventTypes = getUniqueEventTypes();
+        StringBuilder eventDistribution = new StringBuilder();
+        for (String type : eventTypes) {
+            int count = 0;
+            for (LogEntry log : logs) {
+                if (log.getEventType().equalsIgnoreCase(type)) {
+                    count++;
+                }
+            }
+            eventDistribution.append(String.format("   - %s: %d\n", type, count));
+        }
+
+        String[] operatorsList = getUniqueOperators();
+        String operatorsAll = String.join(", ", operatorsList);
+
+        StringBuilder report = new StringBuilder();
+        report.append("==============\n");
+        report.append(String.format("RAPORT FARMY: %s\n", name.toUpperCase()));
+        report.append(String.format("LOKALIZACJA: %s\n", location));
+        report.append(String.format("OPERATOR: %s\n", operator));
+        report.append("--------------\n");
+        report.append(String.format("Liczba turbin: %d\n", turbines.size()));
+        report.append(String.format("Liczba wpisów: %d\n", logs.size()));
+        report.append(String.format("Zakres danych: %s - %s\n", minDate.toLocalDate(), maxDate.toLocalDate()));
+        report.append("--------------\n");
+        report.append("ROZKŁAD ZDARZEŃ:\n");
+        report.append(eventDistribution);
+        report.append("--------------\n");
+        report.append("LISTA OPERATORÓW:\n");
+        report.append(operatorsAll).append("\n");
+        report.append("==============");
+        
+
+        return report.toString();
     }
 }

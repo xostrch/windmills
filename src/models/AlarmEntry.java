@@ -5,10 +5,10 @@ import interfaces.Inspectable;
 import java.time.LocalDateTime;
 
 public class AlarmEntry extends LogEntry implements Inspectable {
-    private final int alarmCode;
+    private final String alarmCode;
     private final String severity;
 
-    public AlarmEntry(LocalDateTime timestamp, String turbineId, String eventType, String operatorName, SensorReading[] readings, int alarmCode, String severity) {
+    public AlarmEntry(LocalDateTime timestamp, String turbineId, String eventType, String operatorName, SensorReading[] readings, String alarmCode, String severity) {
         super(timestamp, turbineId, eventType, operatorName, readings);
 
         String[] validSeverities = {"LOW","MEDIUM","HIGH","CRITICAL"};
@@ -23,15 +23,15 @@ public class AlarmEntry extends LogEntry implements Inspectable {
             throw new IllegalArgumentException("Nieprawidlowy poziom waznosci");
         }
 
-        if(alarmCode < 0){
-            throw new IllegalArgumentException("Kod alarmu nie moze byc ujemny");
+        if(alarmCode == null || alarmCode.trim().isEmpty()){
+            throw new IllegalArgumentException("Kod alarmu nie moze byc null ani pusty");
         }
 
         this.alarmCode = alarmCode;
         this.severity = severity;
     }
 
-    public int getAlarmCode() {
+    public String getAlarmCode() {
         return alarmCode;
     }
 
@@ -41,7 +41,7 @@ public class AlarmEntry extends LogEntry implements Inspectable {
 
     @Override
     public String describe(){
-        return String.format("ALARM %d (POZIOM: %s)", alarmCode, severity);
+        return String.format("ALARM %s (POZIOM: %s)", alarmCode, severity);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class AlarmEntry extends LogEntry implements Inspectable {
 
     @Override
     public String toCsv(){
-        return String.format("%s|%d|%s", super.toCsv(), alarmCode, severity);
+        return String.format("%s|%s|%s", super.toCsv(), alarmCode, severity);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class AlarmEntry extends LogEntry implements Inspectable {
         baseJson = baseJson.substring(0, baseJson.length() - 1);
         return String.format(
                 "%s," +
-                        "\"alarmCode\":%d," +
+                        "\"alarmCode\":\"%s\"," +
                         "\"severity\":\"%s\"" +
                         "}",baseJson, alarmCode, severity);
     }

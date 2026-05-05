@@ -74,4 +74,14 @@ public class WindTurbine {
         }
         return this.turbineId.equalsIgnoreCase(other.turbineId);
     }
+
+    @Override
+    public int hashCode(){
+        if(this.turbineId != null){
+            String lowerId = this.turbineId.toLowerCase();
+            return lowerId.hashCode();
+        }else{
+            return 0;
+        }
+    }
 }

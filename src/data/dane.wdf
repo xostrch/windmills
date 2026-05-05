@@ -1,10 +1,8 @@
-# Sekcja 1 – metadane farmy
 #WINDFARM
 name: Wielkopolska North
 operator: Enea Serwis
 location: Poznan
 ---
-# Sekcja 2 – turbiny
 #TURBINES
 T001|Siemens SWT-4.0|4000|120|WIND_SPEED,RPM,POWER,TEMP
 T002|Vestas V112|3300|94|WIND_SPEED,RPM,POWER,PRESSURE
