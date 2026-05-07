@@ -58,6 +58,8 @@ public class TurbineApp {
             System.out.println("Błąd: Brak danych na farmie do wygenerowania statystyk.");
             return;
         }
+        String technicalRaport = analytics.getTechnicalSummary(farm);
+        System.out.println(technicalRaport);
         printGeneralPowerStats();
         printTurbinesRanking();
         printEventTypesReport();
@@ -453,7 +455,64 @@ public class TurbineApp {
                 }
             }
         }
-        LogEntry newEntry = new LogEntry(timestamp, selectedTurbine.getTurbineId(), eventType, operatorName, newReadings);
+        LogEntry newEntry;
+
+        switch(eventType) {
+            case "ALARM":
+                String severity = "";
+                while(severity.isEmpty()){
+                    System.out.print("Podaj poziom ważności alarmu (LOW/MEDIUM/HIGH/CRITICAL): ");
+                    String input = scanner.nextLine().trim().toUpperCase();
+                    if(input.equals("LOW") || input.equals("MEDIUM") || input.equals("HIGH") || input.equals("CRITICAL")){
+                        severity = input;
+                    }else{
+                        System.out.println("Nieprawidlowy poziom waznosci");
+                    }
+                }
+                String alarmCode = "";
+                while(alarmCode.isEmpty()){
+                    System.out.print("Podaj kod alarmu: ");
+                    String input = scanner.nextLine().trim().toUpperCase();
+                    if(!input.isEmpty()){
+                        alarmCode = input;
+                    }else{
+                        System.out.println("Kod alarmu nie moze byc pusty");
+                    }
+                }
+                newEntry = new models.AlarmEntry(timestamp, selectedTurbine.getTurbineId(),
+                        eventType, operatorName, newReadings, alarmCode, severity);
+                break;
+
+
+            case "MAINTENANCE":
+                String mType = "";
+                while(mType.isEmpty()){
+                    System.out.print("Podaj typ konserwacji(PLANNED/EMERGENCY/INSPECTION): ");
+                    String input = scanner.nextLine().trim().toUpperCase();
+                    if(input.equals("PLANNED") || input.equals("EMERGENCY") || input.equals("INSPECTION")){
+                        mType = input;
+                    }else{
+                        System.out.println("Nieprawidlowy typ");
+                    }
+                }
+                double duration = -1;
+                while(duration < 0){
+                    System.out.print("Podaj czas trwania (w godzinach): ");
+                    try{
+                        double input = Double.parseDouble(scanner.nextLine().trim());
+                        if(input >= 0){
+                            duration = input;
+                        }
+                    }catch (NumberFormatException e){
+                        System.out.println("Błąd: To nie jest poprawna liczba! Wpisz np. 2.5");
+                    }
+                }
+                newEntry = new models.MaintenanceEntry(timestamp, selectedTurbine.getTurbineId(),
+                        eventType, operatorName, newReadings, mType, duration);
+                break;
+            default:
+                newEntry = new models.OperationalEntry(timestamp, selectedTurbine.getTurbineId(), eventType, operatorName, newReadings);
+        }
         farm.addLog(newEntry);
         System.out.println(">>> SUKCES: Wpis został dodany pomyślnie!");
     }

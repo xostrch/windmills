@@ -1,6 +1,8 @@
 package analysis;
 
+import models.AlarmEntry;
 import models.LogEntry;
+import models.MaintenanceEntry;
 import models.WindFarm;
 
 import java.time.LocalDate;
@@ -160,6 +162,100 @@ public class FarmAnalytics {
             }
         }
         return maxPowerMonth;
+    }
+
+
+    public List<AlarmEntry> getAllAlarms(WindFarm farm){
+        List<AlarmEntry> alarmList = new ArrayList<>();
+
+        for(LogEntry entry : farm.getLogs()){
+            if(entry instanceof AlarmEntry alarm){
+                alarmList.add(alarm);
+            }
+        }
+        return alarmList;
+    }
+
+    public List<MaintenanceEntry> getAllMaintenances(WindFarm farm){
+        List<MaintenanceEntry> maintenanceList = new ArrayList<>();
+
+        for(LogEntry entry : farm.getLogs()){
+            if(entry instanceof MaintenanceEntry maintenance){
+                maintenanceList.add(maintenance);
+            }
+        }
+        return maintenanceList;
+    }
+
+    public Map<String, Integer> getAlarmSeverityDistribution(WindFarm farm){
+        Map<String, Integer> distribution = new HashMap<>();
+        List<AlarmEntry> alarms = getAllAlarms(farm);
+        int lowCounter = 0;
+        int mediumCounter = 0;
+        int highCounter = 0;
+        int criticalCounter = 0;
+        for(AlarmEntry alarm : alarms){
+            String severity = alarm.getSeverity().toUpperCase();
+
+            switch(severity){
+                case "LOW":
+                    lowCounter++;
+                    break;
+                case "MEDIUM":
+                    mediumCounter++;
+                    break;
+                case "HIGH":
+                    highCounter++;
+                    break;
+                case "CRITICAL":
+                    criticalCounter++;
+                    break;
+            }
+        }
+        distribution.put("LOW", lowCounter);
+        distribution.put("MEDIUM", mediumCounter);
+        distribution.put("HIGH", highCounter);
+        distribution.put("CRITICAL", criticalCounter);
+        return distribution;
+    }
+
+    public List<AlarmEntry> getUnhealthyAlarms(WindFarm farm){
+        List<AlarmEntry> unhealthyAlarms = new ArrayList<>();
+        List<AlarmEntry> allAlarms = getAllAlarms(farm);
+
+        for(AlarmEntry alarm : allAlarms){
+            if(!alarm.isHealthy()){
+                unhealthyAlarms.add(alarm);
+            }
+        }
+        return unhealthyAlarms;
+    }
+
+    public String getTechnicalSummary(WindFarm farm){
+        int totalLogs = farm.logCount();
+        List<AlarmEntry> allAlarms = getAllAlarms(farm);
+        int alarmCount = allAlarms.size();
+        Map<String, Integer> severityMap = getAlarmSeverityDistribution(farm);
+        int highPriorityAlarms = severityMap.getOrDefault("HIGH",0)
+                + severityMap.getOrDefault("CRITICAL",0);
+        StringBuilder sb = new StringBuilder();
+        sb.append("=====PODSUMOWANIE STANU TECHNICZNEGO=====\n");
+        sb.append(String.format("Ogólna liczba wpisów: %d\n", totalLogs));
+        sb.append(String.format("Liczba wszystkich alarmów: %d\n", alarmCount));
+        sb.append(String.format("Liczba alarmów o wysokim priorytecie(HIGH/CRITICAL): %d\n", highPriorityAlarms));
+        sb.append("---------------\n");
+        sb.append("ROZKŁAD ALARMÓW PER TURBINA");
+        String[] turbineReport = getAlarmsPerTurbineReport(farm);
+        if(turbineReport.length == 0){
+            sb.append("Brak zarejestrowanych alarmów dla turbin.\n");
+        }else{
+            for(String line : turbineReport){
+                String[] parts = line.split(":");
+                sb.append(String.format("Turbina: %s: %s alarmów\n",parts[0],parts[1]));
+            }
+        }
+        sb.append("====================");
+        return sb.toString();
     }
 
 
