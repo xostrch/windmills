@@ -38,124 +38,53 @@ public class DaneStudenta {
         farm.addTurbine(t3);
 
         String[] ops = {"Anna Kowalska", "Jan Nowak", "Piotr Zamek"};
+        String[] alarmSeverities = {"LOW", "MEDIUM", "HIGH", "CRITICAL"};
+        String[] maintTypes = {"PLANNED", "EMERGENCY", "INSPECTION"};
 
-        // === ALARM (10) ===
-        for(int i = 0; i < 10; i++) {
-            String turbineId;
+        for (int i = 0; i < 15; i++) {
+            String sev = (i < 5) ? "CRITICAL" : alarmSeverities[i % 4];
+            SensorReading[] readings = {new SensorReading("TEMPERATURE", 85.0 + i)};
 
-            if (i % 3 == 0) {
-                turbineId = "T001";
-            } else if (i % 3 == 1) {
-                turbineId = "T002";
-            } else {
-                turbineId = "T003";
-            }
-
-            SensorReading[] readings;
-            if (turbineId.equals("T003")) {
-                readings = new SensorReading[]{
-                        new SensorReading("WIND_SPEED", 2 + i),
-                        new SensorReading("TEMPERATURE", 15 + i)
-                };
-            } else {
-                readings = new SensorReading[]{
-                        new SensorReading("POWER", 100 + i * 10),
-                        new SensorReading("WIND_SPEED", 2 + i),
-                        new SensorReading("TEMPERATURE", 15 + i)
-                };
-            }
-
-            farm.addLog(new LogEntry(
-                    LocalDateTime.of(2024, 1, 10 + i, 8 + (i % 10), 0),
-                    turbineId,
+            farm.addLog(new AlarmEntry(
+                    LocalDateTime.of(2024, 1, (i % 25) + 1, (i * 1) % 24, (i * 4) % 60),
+                    (i % 3 == 0) ? "T001" : "T002",
                     "ALARM",
                     ops[i % 3],
-                    readings
+                    readings,
+                    "ERR-" + (100 + i),
+                    sev
             ));
         }
 
-        // === MAINTENANCE (5) ===
-        for(int i = 0; i < 5; i++) {
-            String turbineId;
 
-            if (i % 2 == 0) {
-                turbineId = "T002";
-            } else {
-                turbineId = "T001";
-            }
+        for (int i = 0; i < 10; i++) {
+            SensorReading[] readings = {new SensorReading("OIL_PRESSURE", 3.1)};
 
-            SensorReading[] readings;
-            if (turbineId.equals("T003")) {
-                readings = new SensorReading[]{
-                        new SensorReading("WIND_SPEED", 2 + i),
-                        new SensorReading("TEMPERATURE", 15 + i)
-                };
-            } else {
-                readings = new SensorReading[]{
-                        new SensorReading("POWER", 100 + i * 10),
-                        new SensorReading("WIND_SPEED", 2 + i),
-                        new SensorReading("TEMPERATURE", 15 + i)
-                };
-            }
-
-            farm.addLog(new LogEntry(
-                    LocalDateTime.of(2024, 2, 10 + i, 10 + i, 0),
-                    turbineId,
+            farm.addLog(new MaintenanceEntry(
+                    LocalDateTime.of(2024, 2, (i % 25) + 1, 7 + (i % 10), (i * 5) % 60),
+                    (i % 2 == 0) ? "T002" : "T003",
                     "MAINTENANCE",
                     ops[i % 3],
-                    readings
+                    readings,
+                    maintTypes[i % 3],
+                    2.0 + i
             ));
         }
 
-        String[] eventTypes = {"OPERATIONAL", "SHUTDOWN", "STARTUP", "ALARM", "MAINTENANCE"};
-        // === OPERATIONAL T001 (15) ===
-        for(int i = 0; i < 15; i++) {
+
+        for (int i = 0; i < 25; i++) {
+            int month = 3 + (i / 7);
             SensorReading[] readings = {
-                    new SensorReading("POWER", 3000 + i * 50),
-                    new SensorReading("WIND_SPEED", 10 + (i % 5)),
-                    new SensorReading("TEMPERATURE", 18 + i),
-                    new SensorReading("ROTOR_SPEED", 12 + i),
-                    new SensorReading("OIL_PRESSURE", 4 + (i * 0.1)),
-                    new SensorReading("VIBRATION", 0.01 + (i * 0.001))
+                    new SensorReading("POWER", 2500 + i * 50),
+                    new SensorReading("WIND_SPEED", 11.0 + (i % 4))
             };
 
-            String eventType = eventTypes[i % eventTypes.length];
+            String turbineId = (i % 3 == 0) ? "T001" : (i % 3 == 1 ? "T002" : "T003");
 
-            farm.addLog(new LogEntry(
-                    LocalDateTime.of(2024, 3, i + 1, 12 + (i % 6), 0),
-                    "T001",
-                    eventType,
-                    ops[i % 3],
-                    readings
-            ));
-        }
-
-        // === OPERATIONAL T002/T003 (20) ===
-        for(int i = 0; i < 20; i++) {
-            String turbineId = (i % 2 == 0) ? "T002" : "T003";
-
-            SensorReading[] readings;
-            if (turbineId.equals("T003")) {
-                readings = new SensorReading[]{
-                        new SensorReading("WIND_SPEED", 7 + (i % 4)),
-                        new SensorReading("TEMPERATURE", 19 + (i % 10)),
-                        new SensorReading("ROTOR_SPEED", 11 + i)
-                };
-            } else {
-                readings = new SensorReading[]{
-                        new SensorReading("POWER", 2000 + i * 30),
-                        new SensorReading("WIND_SPEED", 7 + (i % 4)),
-                        new SensorReading("TEMPERATURE", 19 + (i % 10)),
-                        new SensorReading("ROTOR_SPEED", 11 + i)
-                };
-            }
-
-            String eventType = eventTypes[i % eventTypes.length];
-
-            farm.addLog(new LogEntry(
-                    LocalDateTime.of(2024, 4, i + 1, 14 + (i % 5), 0),
+            farm.addLog(new OperationalEntry(
+                    LocalDateTime.of(2024, month, (i % 25) + 1, (i * 3) % 24, (i * 2) % 60),
                     turbineId,
-                    eventType,
+                    (i % 10 == 0) ? "STARTUP" : "OPERATIONAL",
                     ops[i % 3],
                     readings
             ));

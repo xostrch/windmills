@@ -5,14 +5,15 @@ import models.*;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.List;
 
 public class FarmDataReader implements java.lang.AutoCloseable {
     private final Scanner scanner;
-    private final String path;
+    private final List<String> skippedLines = new ArrayList<>();
 
     public FarmDataReader(String path) throws IOException {
-        this.path = path;
         File file = new File(path);
 
         if(!file.exists()){
@@ -28,6 +29,8 @@ public class FarmDataReader implements java.lang.AutoCloseable {
     }
 
     public WindFarm readFarm(){
+        skippedLines.clear();
+
         String name = null;
         String operator = null;
         String location = null;
@@ -56,7 +59,27 @@ public class FarmDataReader implements java.lang.AutoCloseable {
                         LogEntry entry = parseLogLine(p);
                         farm.addLog(entry);
                     } catch (Exception e) {
-                        throw new WdfParseError("Błąd krytyczny w linii: " + line, e);
+                        skippedLines.add("BŁĄD: " + line + " (Powód: " + e.getMessage() + ")");
+                    }
+                }else{
+                    try {
+                        String tId = p[0].trim();
+                        String tModel = p[1].trim();
+                        int tPower = Integer.parseInt(p[2].trim());
+                        int tHeight = Integer.parseInt(p[3].trim());
+
+                        SensorReading[] sensors = new SensorReading[0];
+                        if (p.length > 4) {
+                            String[] sNames = p[4].split(",");
+                            sensors = new SensorReading[sNames.length];
+                            for (int i = 0; i < sNames.length; i++) {
+                                sensors[i] = new SensorReading(sNames[i].trim(), 0.0);
+                            }
+                        }
+
+                        farm.addTurbine(new WindTurbine(tId, tModel, tPower, tHeight, sensors));
+                    } catch (Exception e) {
+                        skippedLines.add("BŁĄD TURBINY: " + line + " (Sprawdź format danych)");
                     }
                 }
             }
@@ -104,4 +127,9 @@ public class FarmDataReader implements java.lang.AutoCloseable {
         }
         return readings;
     }
+
+    public List<String> getSkippedLines(){
+        return this.skippedLines;
+    }
+
 }

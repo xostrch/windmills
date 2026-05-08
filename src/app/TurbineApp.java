@@ -2,16 +2,15 @@ package app;
 
 import analysis.FarmAnalytics;
 import data.DaneStudenta;
-import models.LogEntry;
-import models.SensorReading;
-import models.WindFarm;
-import models.WindTurbine;
+import models.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class TurbineApp {
@@ -36,6 +35,8 @@ public class TurbineApp {
             System.out.println("| 3. Przeglądaj zdarzenie |");
             System.out.println("| 4. Dodaj wpis |");
             System.out.println("| 5. Informacje o farmie |");
+            System.out.println("| 6. Wczytaj dane z pliku WDF |");
+            System.out.println("| 7. Eksportuj wpisy |");
             System.out.println("| 0. Wyjście |");
 
             String choice = scanner.nextLine();
@@ -45,9 +46,11 @@ public class TurbineApp {
                 case "3": browseEvents(); break;
                 case "4": addLogEntry(); break;
                 case "5": showFarmInfo(); break;
+                case "6": loadDataFromFile(); break;
+                case "7": exportData(); break;
                 case "0": running = false; break;
                 default:
-                    System.out.println("Niepoprawny wybór. Wpisz cyfre od 0 do 5");
+                    System.out.println("Niepoprawny wybór. Wpisz cyfre od 0 do 7");
             }
         }
     }
@@ -179,6 +182,8 @@ public class TurbineApp {
         }
         printTurbineData(selectedId);
         printTurbineLogStats(selectedId);
+        printTurbineSeverityStatus(selectedId);
+        printCriticalAlarmsListing(selectedId);
         printMonthlyPowerPerTurbine(selectedId);
         printPaginatedLogs(selectedId);
     }
@@ -189,6 +194,7 @@ public class TurbineApp {
         for(String id : availableIds){
             WindTurbine turbine = farm.getTurbineById(id);
             if (turbine != null) {
+                System.out.println(String.format("[%s] Model: %s", id, turbine.getModel()));
                 System.out.println(String.format("[%s] Model: %s", id, turbine.getModel()));
             }else{
                 System.out.println(String.format("[%s]", id));
@@ -271,6 +277,38 @@ public class TurbineApp {
         }
         System.out.println("--- Koniec listy ---");
     }
+
+    public void printCriticalAlarmsListing(String selectedId){
+        System.out.println("\n=== LISTING ALARMÓW HIGH/CRITICAL===");
+        ArrayList<LogEntry> logs = farm.filterByTurbine(selectedId).getLogs();
+        boolean found = false;
+
+        for(LogEntry log : logs){
+            if(log instanceof AlarmEntry alarm){
+                String severity = alarm.getSeverity();
+                if(severity.equals("HIGH") || severity.equals("CRITICAL")){
+                    System.out.println(alarm.inspect());
+                    found = true;
+                }
+            }
+        }
+        if(!found){
+            System.out.println("Brak zarejestrowanych alarmów o wysokim priorytecie.");
+        }
+    }
+
+    public void printTurbineSeverityStatus(String selectedId){
+        System.out.println("\n===ROZKŁAD ALARMÓW WEDŁUG WAŻNOŚCI===");
+        WindFarm turbineData = farm.filterByTurbine(selectedId);
+        Map<String, Integer> severityMap = analytics.getAlarmSeverityDistribution(turbineData);
+
+        System.out.println("CRITICAL: " + severityMap.getOrDefault("CRITICAL", 0));
+        System.out.println("HIGH:     " + severityMap.getOrDefault("HIGH", 0));
+        System.out.println("MEDIUM:   " + severityMap.getOrDefault("MEDIUM", 0));
+        System.out.println("LOW:      " + severityMap.getOrDefault("LOW", 0));
+    }
+
+
 
     public void browseEvents(){
         WindFarm filtered = null;
@@ -566,4 +604,77 @@ public class TurbineApp {
         }
     }
 
+    public void loadDataFromFile(){
+        System.out.println("======= WCZYTYWANIE DANYCH Z PLIKU WDF =======");
+        System.out.println("Podaj scieżke do pliku (np. src/data/dane.wdf): ");
+        String filePath = scanner.nextLine().trim();
+
+        try (io.FarmDataReader reader = new io.FarmDataReader(filePath)) {
+            WindFarm newFarm = reader.readFarm();
+            this.farm = newFarm;
+            List<String> invalidLines = reader.getSkippedLines();
+            System.out.println("\n=== SUKCES: Dane wczytane poprawnie!===");
+            System.out.println("Liczba turbin: " + farm.turbineCount());
+            System.out.println("Liczba wpisów: " + farm.logCount());
+            if(!invalidLines.isEmpty()){
+                System.out.println("Liczba wadliwych lini: " + invalidLines.size());
+                System.out.println("--- LISTA BŁĘDÓW ---");
+                invalidLines.forEach(System.out::println);
+            }else{
+                System.out.println("Wszystkie linie wczytane pomyslnie.");
+            }
+        } catch (java.io.IOException e) {
+            System.out.println("Błąd pliku: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Błąd krytyczny: " + e.getMessage());
+        }
+    }
+
+    public void exportData() {
+        System.out.println("======= EKSPORT DANYCH =======");
+        System.out.println("1. Wszystkie wpisy -> CSV");
+        System.out.println("2. Wszystkie wpisy -> JSON");
+        System.out.println("3. Alarmy HIGH/CRITICAL -> CSV");
+        System.out.print("Wybór");
+
+        io.FarmExporter exporter = new io.FarmExporter();
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String farmName = farm.getName().replace(" ", "_");
+        String path = "data/exports/" + farmName;
+
+        String choice = scanner.nextLine();
+        try {
+            switch (choice) {
+                case "1":
+                    String pathAllCsv = path + "_all_" + timestamp + ".csv";
+                    exporter.exportToCsv(farm.getLogs(), pathAllCsv);
+                    System.out.println("---EKSPORT ZAKONCZONY---");
+                    break;
+                case "2":
+                    String pathAllJson = path + "_all_" + timestamp + ".json";
+                    exporter.exportToJson(farm.getLogs(), pathAllJson);
+                    System.out.println("---EKSPORT ZAKONCZONY---");
+                    break;
+                case "3":
+                    List<LogEntry> criticals = new ArrayList<>();
+                    for(LogEntry log : farm.getLogs()){
+                        if(log instanceof AlarmEntry alarm){
+                            if(!alarm.isHealthy()){
+                                criticals.add(alarm);
+                            }
+                        }
+                    }
+                    String pathCritic = path + "_critical_" + timestamp + ".csv";
+                    exporter.exportToCsv(criticals, pathCritic);
+                    System.out.println("---EKSPORT ALARMÓW ZAKONCZONY");
+                    break;
+                default:
+                    System.out.println("Nieprawidlowy wybor");
+                    break;
+            }
+        } catch (Exception e) {
+            System.out.println("BŁĄD ZAPISU: " + e.getMessage());
+        }
+    }
 }
+

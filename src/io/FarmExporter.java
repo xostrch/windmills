@@ -2,30 +2,38 @@ package io;
 
 import interfaces.Exportable;
 import models.LogEntry;
-import models.WindFarm;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class FarmExporter {
-    public void exportToCsv(WindFarm farm, String path) throws IOException {
+    private void ensureDirectoryExists() {
+        File dir = new File("data/exports");
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+    }
+
+
+    public void exportToCsv(List<LogEntry> logs, String path) throws IOException {
+        ensureDirectoryExists();
         try(FileOutputStream fos = new FileOutputStream(path)){
             String header = Exportable.csvHeader() + "\n";
             fos.write(header.getBytes(StandardCharsets.UTF_8));
 
-            for(LogEntry log : farm.getLogs()){
+            for(LogEntry log : logs){
                 String line = log.toCsv() + "\n";
                 fos.write(line.getBytes(StandardCharsets.UTF_8));
             }
         }
     }
 
-    public void exportToJson(WindFarm farm, String path) throws IOException{
+    public void exportToJson(List<LogEntry> logs, String path) throws IOException{
+        ensureDirectoryExists();
         try(FileOutputStream fos = new FileOutputStream(path)){
-            List<LogEntry> logs = farm.getLogs();
-
             fos.write("[\n".getBytes(StandardCharsets.UTF_8));
 
             for(int i = 0; i < logs.size(); i++){
