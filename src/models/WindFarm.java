@@ -1,9 +1,15 @@
 package models;
 
+import functional.EntryComparators;
+import functional.EntryPredicates;
 import interfaces.Reportable;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 public class WindFarm implements Reportable {
     private final String name;
@@ -33,48 +39,31 @@ public class WindFarm implements Reportable {
     }
 
     public WindTurbine getTurbineById(String id){
-        for(WindTurbine t : turbines){
-            if(t.getTurbineId().equalsIgnoreCase(id)){
-                return t;
-            }
-        }
-        return null;
+        return turbines.stream()
+                .filter(t -> t.getTurbineId().equalsIgnoreCase(id))
+                .findFirst()
+                .orElse(null);
     }
 
     public String[] getUniqueTurbineIds(){
-        ArrayList<String> tempUnique = new ArrayList<>();
-        for(WindTurbine t : turbines){
-            String id = t.getTurbineId();
-            if(!tempUnique.contains(id)){
-                tempUnique.add(id);
-            }
-        }
-        String[] uniqueTurbineIds = new String[tempUnique.size()];
-        return tempUnique.toArray(uniqueTurbineIds);
+        return turbines.stream()
+                .map(WindTurbine::getTurbineId)
+                .distinct()
+                .toArray(String[]::new);
     }
 
     public String[] getUniqueOperators(){
-        ArrayList<String> tempUnique = new ArrayList<>();
-        for(LogEntry log : logs){
-            String operator = log.getOperatorName().trim().toUpperCase();
-            if(!tempUnique.contains(operator)){
-                tempUnique.add(operator);
-            }
-        }
-        String[] uniqueOperators = new String[tempUnique.size()];
-        return tempUnique.toArray(uniqueOperators);
+        return logs.stream()
+                .map(log -> log.getOperatorName().trim().toUpperCase())
+                .distinct()
+                .toArray(String[]::new);
     }
 
     public String[] getUniqueEventTypes(){
-        ArrayList<String> tempUnique = new ArrayList<>();
-        for(LogEntry log : logs){
-            String eventType = log.getEventType();
-            if(!tempUnique.contains(eventType)){
-                tempUnique.add(eventType);
-            }
-        }
-        String[] uniqueEventTypes = new String[tempUnique.size()];
-        return tempUnique.toArray(uniqueEventTypes);
+        return logs.stream()
+                .map(LogEntry::getEventType)
+                .distinct()
+                .toArray(String[]::new);
     }
 
     public int logCount(){
@@ -85,48 +74,40 @@ public class WindFarm implements Reportable {
         return turbines.size();
     }
 
-    public WindFarm filterByTurbine(String id) {
+    public WindFarm filterByTurbine(String id){
         WindFarm filteredFarm = new WindFarm(this.name, this.operator, this.location);
         filteredFarm.turbines.addAll(this.turbines);
-        for(LogEntry log : this.logs) {
-            if(log.getTurbineId().trim().equalsIgnoreCase(id)){
-                filteredFarm.logs.add(log);
-            }
-        }
+        filteredFarm.logs.addAll(this.logs.stream()
+                .filter(EntryPredicates.byTurbine(id))
+                .collect(toList()));
+
         return filteredFarm;
     }
 
     public WindFarm filterByEventType(String eventType){
         WindFarm filteredFarm = new WindFarm(this.name, this.operator, this.location);
         filteredFarm.turbines.addAll(this.turbines);
-        for(LogEntry log : this.logs){
-            if(log.getEventType().trim().equalsIgnoreCase(eventType)){
-                filteredFarm.logs.add(log);
-            }
-        }
+        filteredFarm.logs.addAll(this.logs.stream()
+                .filter(EntryPredicates.byType(eventType))
+                .collect(toList()));
         return filteredFarm;
     }
 
     public WindFarm filterByOperator(String operator){
         WindFarm filteredFarm = new WindFarm(this.name, this.operator, this.location);
         filteredFarm.turbines.addAll(this.turbines);
-        for(LogEntry log : this.logs){
-            if(log.getOperatorName().equalsIgnoreCase(operator)){
-                filteredFarm.logs.add(log);
-            }
-        }
+        filteredFarm.logs.addAll(this.logs.stream()
+                .filter(EntryPredicates.byOperator(operator))
+                .collect(toList()));
         return filteredFarm;
     }
 
     public WindFarm filterByDateRange(LocalDate start, LocalDate end){
         WindFarm filteredFarm = new WindFarm(this.name, this.operator, this.location);
         filteredFarm.turbines.addAll(this.turbines);
-        for(LogEntry log : this.logs){
-            LocalDate logDate = log.getTimestamp().toLocalDate();
-            if(!logDate.isBefore(start) && !logDate.isAfter(end)){
-                filteredFarm.logs.add(log);
-            }
-        }
+        filteredFarm.logs.addAll(this.logs.stream()
+                .filter(EntryPredicates.byDateRange(start, end))
+                .collect(toList()));
         return filteredFarm;
     }
 
@@ -146,34 +127,49 @@ public class WindFarm implements Reportable {
         }
     }
 
+    public Optional<WindTurbine> findTurbine(String id) {
+        return turbines.stream()
+                .filter(t -> t.getTurbineId().equalsIgnoreCase(id))
+                .findFirst();
+    }
+
+    public Optional<LogEntry> findLatestEntry(String turbineId){
+        return logs.stream()
+                .filter(l -> l.getTurbineId().equalsIgnoreCase(turbineId))
+                .max(EntryComparators.byDateTime());
+    }
+
+    public Optional<AlarmEntry> findFirstCriticalAlarm() {
+        return logs.stream()
+                .filter(e -> e instanceof AlarmEntry)
+                .map(e -> (AlarmEntry) e)
+                .filter(a -> a.getSeverity().equalsIgnoreCase("CRITICAL"))
+                .findFirst();
+    }
+
     @Override
     public String generateReport(){
         if(logs.isEmpty()){
             return String.format("Raport dla farmy: %s - (brak wpisów w systemie)", name);
         }
 
-        java.time.LocalDateTime minDate = logs.get(0).getTimestamp();
-        java.time.LocalDateTime maxDate = logs.get(0).getTimestamp();
+        LocalDate minDate = logs.stream()
+                .map(log -> log.getTimestamp().toLocalDate())
+                .min(LocalDate::compareTo)
+                .orElse(LocalDate.now());
 
-        for (LogEntry log : logs) {
-            if (log.getTimestamp().isBefore(minDate)) minDate = log.getTimestamp();
-            if (log.getTimestamp().isAfter(maxDate)) maxDate = log.getTimestamp();
-        }
+        LocalDate maxDate = logs.stream()
+                .map(log -> log.getTimestamp().toLocalDate())
+                .max(LocalDate::compareTo)
+                .orElse(LocalDate.now());
 
-        String[] eventTypes = getUniqueEventTypes();
-        StringBuilder eventDistribution = new StringBuilder();
-        for (String type : eventTypes) {
-            int count = 0;
-            for (LogEntry log : logs) {
-                if (log.getEventType().equalsIgnoreCase(type)) {
-                    count++;
-                }
-            }
-            eventDistribution.append(String.format("   - %s: %d\n", type, count));
-        }
+        String eventDistribution = logs.stream()
+                .collect(Collectors.groupingBy(LogEntry::getEventType, Collectors.counting()))
+                .entrySet().stream()
+                .map(entry -> String.format("   - %s: %d", entry.getKey(), entry.getValue()))
+                .collect(Collectors.joining("\n"));
 
-        String[] operatorsList = getUniqueOperators();
-        String operatorsAll = String.join(", ", operatorsList);
+        String operatorsAll = String.join(", ", getUniqueOperators());
 
         StringBuilder report = new StringBuilder();
         report.append("==============\n");
@@ -183,7 +179,7 @@ public class WindFarm implements Reportable {
         report.append("--------------\n");
         report.append(String.format("Liczba turbin: %d\n", turbines.size()));
         report.append(String.format("Liczba wpisów: %d\n", logs.size()));
-        report.append(String.format("Zakres danych: %s - %s\n", minDate.toLocalDate(), maxDate.toLocalDate()));
+        report.append(String.format("Zakres danych: %s - %s\n", minDate, maxDate));
         report.append("--------------\n");
         report.append("ROZKŁAD ZDARZEŃ:\n");
         report.append(eventDistribution);
@@ -191,8 +187,7 @@ public class WindFarm implements Reportable {
         report.append("LISTA OPERATORÓW:\n");
         report.append(operatorsAll).append("\n");
         report.append("==============");
-        
-
         return report.toString();
+
     }
 }

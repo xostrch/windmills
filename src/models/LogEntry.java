@@ -84,6 +84,7 @@ public abstract class LogEntry implements Exportable {
         return sb.toString();
     }
 
+    
     public final String format() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         return String.format("[%s] %-6s | %-12s | %-15s | %s",
