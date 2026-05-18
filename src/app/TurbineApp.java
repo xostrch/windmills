@@ -300,12 +300,12 @@ public class TurbineApp {
     public void printTurbineSeverityStatus(String selectedId){
         System.out.println("\n===ROZKŁAD ALARMÓW WEDŁUG WAŻNOŚCI===");
         WindFarm turbineData = farm.filterByTurbine(selectedId);
-        Map<String, Integer> severityMap = analytics.getAlarmSeverityDistribution(turbineData);
+        Map<String, Long> severityMap = analytics.getAlarmSeverityDistribution(turbineData);
 
-        System.out.println("CRITICAL: " + severityMap.getOrDefault("CRITICAL", 0));
-        System.out.println("HIGH:     " + severityMap.getOrDefault("HIGH", 0));
-        System.out.println("MEDIUM:   " + severityMap.getOrDefault("MEDIUM", 0));
-        System.out.println("LOW:      " + severityMap.getOrDefault("LOW", 0));
+        System.out.println("CRITICAL: " + severityMap.getOrDefault("CRITICAL", 0L));
+        System.out.println("HIGH:     " + severityMap.getOrDefault("HIGH", 0L));
+        System.out.println("MEDIUM:   " + severityMap.getOrDefault("MEDIUM", 0L));
+        System.out.println("LOW:      " + severityMap.getOrDefault("LOW", 0L));
     }
 
 
