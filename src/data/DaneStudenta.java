@@ -37,7 +37,13 @@ public class DaneStudenta {
         farm.addTurbine(t2);
         farm.addTurbine(t3);
 
-        String[] ops = {"Anna Kowalska", "Jan Nowak", "Piotr Zamek"};
+        String[] ops = {
+                "Anna Kowalska",
+                "Jan Nowak",
+                "Piotr Zamek",
+                "Marek Kwiatkowski",
+                "Tomasz Balon"
+        };
         String[] alarmSeverities = {"LOW", "MEDIUM", "HIGH", "CRITICAL"};
         String[] maintTypes = {"PLANNED", "EMERGENCY", "INSPECTION"};
 
@@ -49,7 +55,7 @@ public class DaneStudenta {
                     LocalDateTime.of(2024, 1, (i % 25) + 1, (i * 1) % 24, (i * 4) % 60),
                     (i % 3 == 0) ? "T001" : "T002",
                     "ALARM",
-                    ops[i % 3],
+                    ops[i % 5],
                     readings,
                     "ERR-" + (100 + i),
                     sev
@@ -64,7 +70,7 @@ public class DaneStudenta {
                     LocalDateTime.of(2024, 2, (i % 25) + 1, 7 + (i % 10), (i * 5) % 60),
                     (i % 2 == 0) ? "T002" : "T003",
                     "MAINTENANCE",
-                    ops[i % 3],
+                    ops[i % 5],
                     readings,
                     maintTypes[i % 3],
                     2.0 + i
@@ -72,20 +78,27 @@ public class DaneStudenta {
         }
 
 
-        for (int i = 0; i < 25; i++) {
-            int month = 3 + (i / 7);
+        for (int i = 0; i < 30; i++) {
+            int month = 3 + (i / 6);
+
+            double powerValue = 2000.0 + (i * 50.0);
+
             SensorReading[] readings = {
-                    new SensorReading("POWER", 2500 + i * 50),
-                    new SensorReading("WIND_SPEED", 11.0 + (i % 4))
+                    new SensorReading("POWER", powerValue),
+                    new SensorReading("WIND_SPEED", 10.0 + (i % 5))
             };
 
             String turbineId = (i % 3 == 0) ? "T001" : (i % 3 == 1 ? "T002" : "T003");
 
+            int day = 1;
+            if (i >= 10 && i < 20) day = 10;
+            if (i >= 20) day = 20;
+
             farm.addLog(new OperationalEntry(
-                    LocalDateTime.of(2024, month, (i % 25) + 1, (i * 3) % 24, (i * 2) % 60),
+                    LocalDateTime.of(2024, month, day, (i * 4) % 24, (i * 2) % 60),
                     turbineId,
-                    (i % 10 == 0) ? "STARTUP" : "OPERATIONAL",
-                    ops[i % 3],
+                    "OPERATIONAL",
+                    ops[(i + 2) % 5],
                     readings
             ));
         }

@@ -4,10 +4,13 @@ import interfaces.Exportable;
 import models.LogEntry;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class FarmExporter {
     private void ensureDirectoryExists() {
@@ -18,35 +21,33 @@ public class FarmExporter {
     }
 
 
-    public void exportToCsv(List<LogEntry> logs, String path) throws IOException {
+    public void exportToCsv(List<LogEntry> logs, String pathStr) throws IOException {
+        Path path = Paths.get(pathStr);
         ensureDirectoryExists();
-        try(FileOutputStream fos = new FileOutputStream(path)){
-            String header = Exportable.csvHeader() + "\n";
-            fos.write(header.getBytes(StandardCharsets.UTF_8));
 
-            for(LogEntry log : logs){
-                String line = log.toCsv() + "\n";
-                fos.write(line.getBytes(StandardCharsets.UTF_8));
-            }
-        }
+        String csvContent = logs.stream()
+                .map(Exportable::toCsv)
+                .collect(Collectors.joining(
+                        "\n",
+                        Exportable.csvHeader() + "\n",
+                        ""
+                ));
+
+        Files.writeString(path, csvContent, StandardCharsets.UTF_8);
     }
 
-    public void exportToJson(List<LogEntry> logs, String path) throws IOException{
+    public void exportToJson(List<LogEntry> logs, String pathStr) throws IOException {
+        Path path = Paths.get(pathStr);
         ensureDirectoryExists();
-        try(FileOutputStream fos = new FileOutputStream(path)){
-            fos.write("[\n".getBytes(StandardCharsets.UTF_8));
 
-            for(int i = 0; i < logs.size(); i++){
-                String jsonEntry = " " + logs.get(i).toJson();
+        String jsonContent = logs.stream()
+                .map(Exportable::toJson)
+                .collect(Collectors.joining(
+                        ",\n  ",
+                        "[\n  ",
+                        "\n]"
+                ));
 
-                if(i < logs.size() - 1){
-                    jsonEntry += ",";
-                }
-                jsonEntry += "\n";
-                fos.write(jsonEntry.getBytes(StandardCharsets.UTF_8));
-            }
-
-            fos.write("]".getBytes(StandardCharsets.UTF_8));
-        }
+        Files.writeString(path, jsonContent, StandardCharsets.UTF_8);
     }
 }
